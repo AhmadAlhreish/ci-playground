@@ -1,33 +1,28 @@
-#intresting 
 name: Merge Conflict Check
 
 on:
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   check-merge-conflict:
-    runs-on: ubuntu-latest   # GitHub provides this free runner
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout full repo history
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0      # get ALL history, not just latest
+          fetch-depth: 0
 
-      - name: Attempt test merge
+      - name: Check for merge conflicts
         run: |
           git config user.email "ci-bot@example.com"
           git config user.name "CI Bot"
-          git fetch origin ${{ github.head_ref }}
-          git merge --no-commit --no-ff origin/${{ github.head_ref }}
-
-      - name: Clean merge
-        if: success()
-        run: echo "✅ No merge conflicts detected!"
-
-      - name: Conflict detected
-        if: failure()
-        run: |
-          echo "❌ Merge conflict detected!"
-          exit 1
+          BASE=${{ github.base_ref }}
+          HEAD=${{ github.head_ref }}
+          git fetch origin $BASE
+          git fetch origin $HEAD
+          git checkout origin/$BASE
+          git merge --no-commit --no-ff origin/$HEAD || exit 1
+          echo "No merge conflicts found"
