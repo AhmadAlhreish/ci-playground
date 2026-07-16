@@ -1,17 +1,26 @@
 name: Merge Conflict Check
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+permissions:
+  contents: read
 
 jobs:
   check-merge-conflict:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout base repo
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
 
       - name: Check for merge conflicts
@@ -19,6 +28,10 @@ jobs:
           git config user.email "ci-bot@example.com"
           git config user.name "CI Bot"
           git fetch origin main
+          git fetch origin pull/${{ github.event.pull_request.number }}/head:pr-${{ github.event.pull_request.number }}
           git checkout origin/main
-          git merge --no-commit --no-ff origin/${{ github.head_ref }} || exit 1
+          git merge --no-commit --no-ff pr-${{ github.event.pull_request.number }} || {
+            echo "::error::Merge conflict detected"
+            exit 1
+          }
           echo "No merge conflicts found"
