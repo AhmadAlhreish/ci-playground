@@ -8,9 +8,8 @@ on:
 jobs:
   check-merge-conflict:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -19,10 +18,7 @@ jobs:
         run: |
           git config user.email "ci-bot@example.com"
           git config user.name "CI Bot"
-          BASE=${{ github.base_ref }}
-          HEAD=${{ github.head_ref }}
-          git fetch origin $BASE
-          git fetch origin $HEAD
-          git checkout origin/$BASE
-          git merge --no-commit --no-ff origin/$HEAD || exit 1
+          git fetch origin main
+          git checkout origin/main
+          git merge --no-commit --no-ff origin/${{ github.head_ref }} || exit 1
           echo "No merge conflicts found"
